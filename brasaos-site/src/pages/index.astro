@@ -1,0 +1,39 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Hero from '../components/Hero.astro';
+import StatsStrip from '../components/StatsStrip.astro';
+import AboutStrip from '../components/AboutStrip.astro';
+import MenuBoard from '../components/MenuBoard.astro';
+import CartBuilder from '../components/CartBuilder.astro';
+import InstagramShowcase from '../components/InstagramShowcase.astro';
+import VisitMapReviews from '../components/VisitMapReviews.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import menu from '../data/menu.json';
+import instagram from '../data/instagram.json';
+import type { MenuCategory } from '../scripts/cart';
+
+const menuData = menu as MenuCategory[];
+
+const igPosts = instagram.posts ?? [];
+const firstImage =
+  igPosts.map((p) => p.image_urls?.[0]).find(Boolean) ?? '/ig-images/brasaosartesana_DMLbycQMRNJ_1.jpg';
+---
+
+<Layout>
+  <SiteHeader />
+  <main>
+    <Hero heroImage={firstImage} />
+    <StatsStrip
+      followers={instagram.followers}
+      postsCount={instagram.posts_count}
+      fullName={instagram.full_name}
+    />
+    <AboutStrip biography={instagram.biography} externalUrl={instagram.external_url} />
+    <MenuBoard menu={menuData} />
+    <CartBuilder />
+    <InstagramShowcase posts={igPosts} instagramUrl="https://www.instagram.com/brasaosartesana/" />
+    <VisitMapReviews />
+  </main>
+  <SiteFooter />
+</Layout>

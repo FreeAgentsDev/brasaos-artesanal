@@ -1,0 +1,363 @@
+---
+import BrandLogo from './BrandLogo.astro';
+import { SITE } from '../config/site';
+import menu from '../data/menu.json';
+import type { MenuCategory } from '../scripts/cart';
+
+const menuData = menu as MenuCategory[];
+---
+
+<section id="pedido" class="scroll-mt-24 border-y border-ember-500/10 bg-gradient-to-b from-ember-950/20 to-coal-950 py-12 sm:py-16 lg:py-20">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-8 lg:gap-10">
+      <BrandLogo imgClass="h-11 w-auto sm:h-14" />
+      <div class="min-w-0 flex-1">
+        <h2 class="font-display text-2xl font-semibold text-white sm:text-3xl lg:text-4xl">Tu pedido</h2>
+        <p class="mt-2 max-w-prose text-sm leading-relaxed text-stone-400 sm:text-base">
+          Abre el carrito para revisar cantidades, total y enviar por WhatsApp. También puedes usar los atajos
+          de abajo. Todo se guarda en tu navegador.
+        </p>
+        <button
+          type="button"
+          id="pedido-open-cart"
+          class="mt-6 inline-flex min-h-[48px] w-full touch-manipulation items-center justify-center rounded-2xl border border-ember-500/40 bg-ember-600/20 px-6 py-3 text-sm font-semibold text-ember-100 transition hover:bg-ember-600/30 sm:w-auto"
+        >
+          Abrir carrito
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-10 rounded-2xl border border-white/10 bg-coal-900/40 p-4 sm:p-6 lg:p-8">
+      <h3 class="text-xs font-semibold uppercase tracking-wider text-stone-500">Añadir rápido</h3>
+      <p class="mt-1 text-xs text-stone-600 sm:text-sm">Platos populares al toque. El detalle completo está en el menú.</p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        {
+          menuData
+            .flatMap((c) => c.items)
+            .slice(0, 12)
+            .map((item) => (
+              <button
+                type="button"
+                class="quick-add touch-manipulation rounded-full border border-white/10 bg-white/5 px-3 py-2 text-left text-xs text-stone-300 transition hover:border-ember-500/40 hover:text-white sm:text-sm"
+                data-id={item.id}
+                data-name={item.name}
+                data-price={String(item.price)}
+              >
+                + {item.name}
+              </button>
+            ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modal carrito -->
+<div
+  id="cart-modal"
+  class="fixed inset-0 z-[70] hidden items-end justify-center p-0 sm:items-center sm:p-4"
+  aria-hidden="true"
+>
+  <div
+    class="absolute inset-0 bg-coal-950/70 backdrop-blur-[2px]"
+    id="cart-modal-backdrop"
+    role="presentation"
+  >
+  </div>
+
+  <div
+    id="cart-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="cart-modal-title"
+    tabindex="-1"
+    class="relative z-10 flex max-h-[min(90dvh,840px)] w-full max-w-lg flex-col rounded-t-3xl border border-white/10 bg-coal-900 shadow-2xl sm:max-h-[min(85vh,720px)] sm:rounded-3xl"
+  >
+    <div class="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5 sm:py-4">
+      <h2 id="cart-modal-title" class="font-display text-lg font-semibold text-white sm:text-xl">Tu pedido</h2>
+      <button
+        type="button"
+        id="cart-modal-close"
+        class="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full text-2xl leading-none text-stone-400 transition hover:bg-white/10 hover:text-white"
+        aria-label="Cerrar"
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
+      <p id="cart-empty" class="rounded-xl border border-dashed border-white/15 bg-coal-950/50 px-4 py-8 text-center text-sm text-stone-500">
+        Aún no hay productos. Usa el menú o los accesos rápidos de la página.
+      </p>
+      <ul id="cart-lines" class="mt-0 hidden space-y-3" aria-live="polite"></ul>
+    </div>
+
+    <div class="shrink-0 border-t border-white/10 bg-coal-950/90 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:rounded-b-3xl sm:px-5">
+      <div class="flex items-baseline justify-between gap-4">
+        <span class="text-sm text-stone-400">Total estimado</span>
+        <span id="cart-total" class="font-display text-xl tabular-nums text-ember-200 sm:text-2xl">$ 0</span>
+      </div>
+      <p class="mt-1 text-xs text-stone-600">Precios en pesos colombianos (COP).</p>
+      <div class="mt-4 flex flex-col gap-2.5">
+        <button
+          type="button"
+          id="btn-whatsapp"
+          class="inline-flex min-h-[48px] w-full touch-manipulation items-center justify-center rounded-2xl bg-[#25D366] px-4 py-3 text-sm font-semibold text-white transition hover:brightness-110"
+        >
+          Enviar por WhatsApp
+        </button>
+        <button
+          type="button"
+          id="btn-copy"
+          class="inline-flex min-h-[48px] w-full touch-manipulation items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+        >
+          Copiar pedido
+        </button>
+        <button
+          type="button"
+          id="btn-clear"
+          class="min-h-[44px] w-full touch-manipulation py-2 text-center text-sm text-stone-500 underline-offset-4 hover:text-stone-300 hover:underline"
+        >
+          Vaciar carrito
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB móvil -->
+<div
+  id="cart-fab"
+  class="pointer-events-none fixed bottom-0 left-0 right-0 z-[65] flex justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] opacity-0 transition-opacity duration-300 sm:hidden"
+  aria-hidden="true"
+>
+  <button
+    type="button"
+    id="fab-open"
+    class="pointer-events-auto flex min-h-[52px] w-[min(100%,20rem)] touch-manipulation items-center justify-center gap-3 rounded-full border border-white/10 bg-coal-900/95 px-6 text-sm font-semibold text-white shadow-2xl backdrop-blur-md"
+  >
+    Ver pedido
+    <span
+      id="fab-count"
+      class="flex h-8 min-w-[2rem] items-center justify-center rounded-full bg-ember-500 px-2 text-xs font-bold"
+      >0</span
+    >
+  </button>
+</div>
+
+<script>
+  import type { MenuCategory } from '../scripts/cart';
+  import {
+    loadCart,
+    saveCart,
+    buildItemMap,
+    cartLines,
+    cartTotal,
+    buildOrderMessage,
+    formatCOP,
+  } from '../scripts/cart';
+  import menu from '../data/menu.json';
+  import { SITE } from '../config/site';
+
+  const menuJson = menu as MenuCategory[];
+  const whatsappE164 = SITE.whatsappE164;
+  const itemMap = buildItemMap(menuJson);
+
+  let cart: Record<string, number> = loadCart();
+
+  const modal = document.getElementById('cart-modal')!;
+  const elLines = document.getElementById('cart-lines')!;
+  const elEmpty = document.getElementById('cart-empty')!;
+  const elTotal = document.getElementById('cart-total')!;
+  const elFab = document.getElementById('cart-fab')!;
+  const elFabCount = document.getElementById('fab-count')!;
+  const elHeaderBadge = document.getElementById('header-cart-badge');
+  const restaurantName = 'Brasaos Artesana';
+
+  let lastFocus: HTMLElement | null = null;
+
+  function isModalOpen() {
+    return !modal.classList.contains('hidden');
+  }
+
+  function openModal() {
+    lastFocus = document.activeElement as HTMLElement;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    window.setTimeout(() => {
+      document.getElementById('cart-modal-close')?.focus();
+    }, 50);
+  }
+
+  function closeModal() {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    lastFocus?.focus();
+  }
+
+  function persist() {
+    saveCart(cart);
+    render();
+    window.dispatchEvent(new CustomEvent('brasaos-cart'));
+  }
+
+  function add(id: string, delta: number) {
+    const cur = cart[id] ?? 0;
+    const next = Math.max(0, cur + delta);
+    if (next === 0) delete cart[id];
+    else cart[id] = next;
+    persist();
+  }
+
+  function setQty(id: string, qty: number) {
+    if (qty < 1) delete cart[id];
+    else cart[id] = qty;
+    persist();
+  }
+
+  function clearCart() {
+    cart = {};
+    persist();
+  }
+
+  function render() {
+    cart = loadCart();
+    const lines = cartLines(cart, itemMap);
+    const total = cartTotal(lines);
+    const count = lines.reduce((s, l) => s + l.qty, 0);
+
+    elTotal.textContent = formatCOP(total);
+    elFabCount.textContent = String(count);
+    if (elHeaderBadge) {
+      elHeaderBadge.textContent = String(count);
+      elHeaderBadge.classList.toggle('opacity-0', count === 0);
+      elHeaderBadge.classList.toggle('opacity-100', count > 0);
+    }
+
+    if (count > 0) {
+      elFab.classList.remove('opacity-0', 'pointer-events-none');
+      elFab.setAttribute('aria-hidden', 'false');
+    } else {
+      elFab.classList.add('opacity-0', 'pointer-events-none');
+      elFab.setAttribute('aria-hidden', 'true');
+    }
+
+    if (lines.length === 0) {
+      elEmpty.classList.remove('hidden');
+      elLines.classList.add('hidden');
+      elLines.innerHTML = '';
+      return;
+    }
+    elEmpty.classList.add('hidden');
+    elLines.classList.remove('hidden');
+    elLines.innerHTML = lines
+      .map(({ item, qty, subtotal }) => {
+        return `<li class="rounded-2xl border border-white/5 bg-coal-950/60 p-3 sm:p-4">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div class="min-w-0 flex-1">
+              <p class="font-medium leading-snug text-white">${escapeHtml(item.name)}</p>
+              <p class="text-xs text-stone-500">${formatCOP(item.price)} c/u</p>
+            </div>
+            <div class="flex items-center justify-between gap-3 sm:shrink-0 sm:justify-end">
+              <div class="flex items-center gap-1.5">
+                <button type="button" class="qty-btn flex h-11 w-11 touch-manipulation items-center justify-center rounded-xl border border-white/10 text-lg leading-none text-white hover:bg-white/5" data-act="dec" data-id="${item.id}" aria-label="Quitar uno">−</button>
+                <input type="number" min="1" inputmode="numeric" class="qty-input h-11 w-14 rounded-xl border border-white/10 bg-coal-900 text-center text-sm text-white" data-id="${item.id}" value="${qty}" />
+                <button type="button" class="qty-btn flex h-11 w-11 touch-manipulation items-center justify-center rounded-xl border border-white/10 text-lg leading-none text-white hover:bg-white/5" data-act="inc" data-id="${item.id}" aria-label="Añadir uno">+</button>
+              </div>
+              <span class="min-w-[5rem] text-right text-base font-semibold tabular-nums text-ember-200">${formatCOP(subtotal)}</span>
+            </div>
+          </div>
+        </li>`;
+      })
+      .join('');
+
+    elLines.querySelectorAll('.qty-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = (btn as HTMLElement).dataset.id!;
+        const act = (btn as HTMLElement).dataset.act!;
+        add(id, act === 'inc' ? 1 : -1);
+      });
+    });
+    elLines.querySelectorAll('.qty-input').forEach((input) => {
+      input.addEventListener('change', () => {
+        const id = (input as HTMLInputElement).dataset.id!;
+        const v = parseInt((input as HTMLInputElement).value, 10);
+        if (Number.isFinite(v)) setQty(id, v);
+      });
+    });
+  }
+
+  function escapeHtml(s: string) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function bindModalTriggers() {
+    const openers = [
+      document.getElementById('fab-open'),
+      document.getElementById('header-cart-open'),
+      document.getElementById('pedido-open-cart'),
+      document.getElementById('cart-toast-open'),
+    ];
+    openers.forEach((el) => el?.addEventListener('click', () => openModal()));
+
+    document.getElementById('cart-modal-close')?.addEventListener('click', () => closeModal());
+    document.getElementById('cart-modal-backdrop')?.addEventListener('click', () => closeModal());
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isModalOpen()) {
+        e.preventDefault();
+        closeModal();
+      }
+    });
+  }
+
+  document.querySelectorAll('.add-to-cart').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = (btn as HTMLElement).dataset.id!;
+      add(id, 1);
+    });
+  });
+
+  document.querySelectorAll('.quick-add').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = (btn as HTMLElement).dataset.id!;
+      add(id, 1);
+    });
+  });
+
+  document.getElementById('btn-clear')?.addEventListener('click', () => clearCart());
+
+  document.getElementById('btn-copy')?.addEventListener('click', async () => {
+    const lines = cartLines(cart, itemMap);
+    if (lines.length === 0) return;
+    const text = buildOrderMessage(lines, restaurantName);
+    try {
+      await navigator.clipboard.writeText(text);
+      (document.getElementById('btn-copy') as HTMLButtonElement).textContent = '¡Copiado!';
+      setTimeout(() => {
+        (document.getElementById('btn-copy') as HTMLButtonElement).textContent = 'Copiar pedido';
+      }, 2000);
+    } catch {
+      prompt('Copia tu pedido:', text);
+    }
+  });
+
+  document.getElementById('btn-whatsapp')?.addEventListener('click', () => {
+    const lines = cartLines(cart, itemMap);
+    if (lines.length === 0) return;
+    const text = buildOrderMessage(lines, restaurantName);
+    window.open(`https://wa.me/${whatsappE164}?text=${encodeURIComponent(text)}`, '_blank');
+  });
+
+  window.addEventListener('brasaos-open-cart', () => openModal());
+
+  window.addEventListener('brasaos-cart', render);
+  bindModalTriggers();
+  render();
+</script>

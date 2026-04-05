@@ -1,0 +1,64 @@
+---
+import { SITE } from '../config/site';
+import BrandLogo from './BrandLogo.astro';
+
+interface Props {
+  heroImage: string;
+}
+
+const { heroImage } = Astro.props;
+---
+
+<section class="relative min-h-[88vh] overflow-hidden pt-14 sm:pt-16">
+  <div
+    class="absolute inset-0 bg-cover bg-center"
+    style={`background-image: url('${heroImage}');`}
+  >
+  </div>
+  <div class="absolute inset-0 bg-gradient-to-t from-coal-950 via-coal-950/70 to-coal-950/30"></div>
+  <div class="absolute inset-0 bg-gradient-to-r from-coal-950/90 via-transparent to-transparent"></div>
+
+  <div class="relative mx-auto flex min-h-[calc(88vh-4rem)] max-w-6xl flex-col justify-end px-4 pb-20 pt-24 sm:px-6 lg:pb-28">
+    <div class="mb-10 sm:mb-12">
+      <BrandLogo imgClass="h-24 w-auto max-w-[min(100%,280px)] sm:h-32 md:h-36" />
+    </div>
+    <p
+      class="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-ember-400/30 bg-ember-500/10 px-4 py-1 text-xs font-medium uppercase tracking-widest text-ember-200"
+    >
+      Pizza Máster 2023 · 2024 · 2025
+    </p>
+    <h1
+      class="font-display text-balance text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl"
+    >
+      Horno artesanal, masa madurada y sabores que cuentan una historia.
+    </h1>
+    <p class="mt-5 max-w-xl text-lg text-stone-300">
+      {SITE.tagline}. Armá tu pedido en el carrito y envialo por WhatsApp con el detalle y el total. Para{' '}
+      <a
+        href={SITE.whatsappReservationUrl}
+        class="text-[#25D366] underline-offset-4 hover:underline"
+        target="_blank"
+        rel="noopener noreferrer">reservar mesa</a
+      >, escribinos por WhatsApp. · {SITE.neighborhood}, {SITE.city}.
+    </p>
+    <div class="mt-10 flex flex-wrap gap-4">
+      <a
+        href="#menu"
+        class="inline-flex items-center justify-center rounded-full bg-ember-500 px-8 py-3.5 text-base font-semibold text-white shadow-glow transition hover:bg-ember-400"
+        >Ver menú</a
+      >
+      <a
+        href="#pedido"
+        class="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-8 py-3.5 text-base font-semibold text-white backdrop-blur transition hover:bg-white/10"
+        >Armar pedido</a
+      >
+      <a
+        href={SITE.whatsappReservationUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center justify-center rounded-full border border-[#25D366]/45 bg-[#25D366]/10 px-8 py-3.5 text-base font-semibold text-[#25D366] transition hover:bg-[#25D366]/20"
+        >Reservar por WhatsApp</a
+      >
+    </div>
+  </div>
+</section>

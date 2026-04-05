@@ -1,0 +1,18 @@
+# Dependencies & build
+node_modules/
+dist/
+.astro/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS & editors
+.DS_Store
+*.swp
+.idea/
+
+# Logs
+*.log
+npm-debug.log*

@@ -1,0 +1,295 @@
+---
+import BrandLogo from './BrandLogo.astro';
+import type { MenuCategory } from '../scripts/cart';
+import { formatCOP } from '../scripts/cart';
+
+interface Props {
+  menu: MenuCategory[];
+}
+
+const { menu } = Astro.props;
+
+function slug(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+---
+
+<section id="menu" class="scroll-mt-24 rounded-t-[2rem] bg-white pb-28 text-stone-900 sm:pb-16">
+  <div class="mx-auto max-w-6xl px-3 py-12 sm:px-6 sm:py-16 lg:py-20">
+    <div class="flex max-w-3xl flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
+      <BrandLogo variant="onLight" imgClass="h-11 w-auto sm:h-12" />
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">Carta</p>
+        <h2 class="font-display mt-2 text-3xl font-semibold text-stone-950 sm:text-4xl">Nuestro menú</h2>
+        <p class="mt-3 text-stone-600">
+          Fotos y precios alineados con el catálogo en{' '}
+          <a
+            href="https://www.foodbooking.com/ordering/restaurant/menu?restaurant_uid=7220a987-ec7d-4b49-abc4-aa5c676e502d&dine_in=true"
+            class="font-medium text-amber-700 underline-offset-2 hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Foodbooking
+          </a>
+          . Usa la búsqueda y el carrito rápido en cada plato.
+        </p>
+      </div>
+    </div>
+
+    <!-- Barra fija: búsqueda + categorías -->
+    <div
+      id="menu-toolbar"
+      class="sticky top-14 z-30 -mx-4 mb-8 border-b border-stone-100 bg-white/95 px-3 py-3 backdrop-blur-md transition-shadow duration-300 sm:top-16 sm:-mx-6 sm:mb-10 sm:px-6 sm:py-4"
+    >
+      <label for="menu-search" class="sr-only">Buscar en el menú</label>
+      <div class="relative">
+        <svg
+          class="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+          ></path>
+        </svg>
+        <input
+          id="menu-search"
+          type="search"
+          name="menu-search"
+          enterkeyhint="search"
+          autocomplete="off"
+          placeholder="Buscar plato, ingrediente…"
+          class="w-full rounded-2xl border border-stone-200 bg-stone-50 py-3.5 pl-12 pr-12 text-base text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-amber-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-400/20"
+        />
+        <button
+          type="button"
+          id="menu-search-clear"
+          class="absolute right-2 top-1/2 hidden h-10 w-10 -translate-y-1/2 rounded-xl text-xl text-stone-500 transition hover:bg-stone-200/80 hover:text-stone-800"
+          aria-label="Limpiar búsqueda"
+        >
+          ×
+        </button>
+      </div>
+      <p id="menu-search-count" class="mt-2 hidden text-center text-sm font-medium text-amber-800" aria-live="polite"
+      ></p>
+      <div
+        class="no-scrollbar mt-4 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 pt-1"
+        role="tablist"
+        aria-label="Ir a categoría"
+      >
+        {
+          menu.map((cat) => (
+            <a
+              href={`#cat-${slug(cat.category)}`}
+              data-slug={slug(cat.category)}
+              class="menu-cat-pill snap-start shrink-0 rounded-full border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm text-stone-700 transition hover:border-amber-300 hover:bg-amber-50 hover:text-stone-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+            >
+              {cat.category}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+
+    <div
+      id="menu-no-results"
+      class="hidden rounded-2xl border border-dashed border-stone-200 bg-stone-50 px-6 py-14 text-center"
+      role="status"
+    >
+      <p class="text-lg font-medium text-stone-700">No encontramos platos con ese criterio</p>
+      <p class="mt-2 text-sm text-stone-500">Prueba otra palabra o limpia la búsqueda.</p>
+    </div>
+
+    <div id="menu-categories-root" class="space-y-16 lg:space-y-24">
+      {
+        menu.map((cat) => (
+          <div
+            id={`cat-${slug(cat.category)}`}
+            data-menu-category={slug(cat.category)}
+            class="scroll-mt-48 lg:scroll-mt-52"
+          >
+            <div class="border-b border-stone-200 pb-4">
+              <h3 class="font-display text-xl font-semibold uppercase tracking-wide text-stone-950 sm:text-2xl">
+                {cat.category}
+              </h3>
+              {cat.categoryDescription ? (
+                <p class="mt-2 max-w-3xl whitespace-pre-line text-stone-600">{cat.categoryDescription}</p>
+              ) : null}
+            </div>
+
+            {cat.categoryImage ? (
+              <div class="mt-6 overflow-hidden rounded-2xl lg:hidden">
+                <img
+                  src={cat.categoryImage}
+                  alt=""
+                  class="h-48 w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  width={800}
+                  height={400}
+                />
+              </div>
+            ) : null}
+
+            <div
+              class:list={[
+                'mt-6 gap-10',
+                cat.categoryImage ? 'lg:grid lg:grid-cols-2 lg:items-start' : '',
+              ]}
+            >
+              <ul
+                class:list={[
+                  'divide-y divide-stone-200 border-t border-stone-200',
+                  cat.categoryImage ? '' : 'max-w-none',
+                ]}
+              >
+                {cat.items.map((item) => (
+                  <li
+                    class="menu-item-row rounded-2xl border border-transparent px-1 py-2 transition hover:border-stone-200 hover:bg-stone-50/90 sm:px-2"
+                    data-item-id={item.id}
+                    data-search={`${item.name} ${item.description ?? ''}`}
+                  >
+                    <div class="flex gap-4 py-4 first:pt-5">
+                      {item.image ? (
+                        <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-stone-100 ring-1 ring-stone-200/80 sm:h-24 sm:w-24">
+                          <img
+                            src={item.image}
+                            alt=""
+                            class="h-full w-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                            width={192}
+                            height={192}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          class="h-20 w-20 shrink-0 rounded-xl bg-stone-100 ring-1 ring-stone-200/80 sm:h-24 sm:w-24"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-baseline justify-between gap-2">
+                          <h4 class="text-lg font-semibold text-stone-950">{item.name}</h4>
+                          <span class="font-display shrink-0 tabular-nums text-lg text-stone-900">
+                            {formatCOP(item.price)}
+                          </span>
+                        </div>
+                        {item.description ? (
+                          <p class="mt-1 text-sm leading-relaxed text-stone-600">{item.description}</p>
+                        ) : null}
+
+                        <div class="mt-4 flex flex-wrap items-center gap-3">
+                          <div
+                            data-menu-stepper
+                            class="hidden items-center gap-0.5 rounded-full border border-amber-400/60 bg-amber-50 p-1 shadow-sm"
+                          >
+                            <button
+                              type="button"
+                              class="menu-qty-dec flex h-11 min-w-[2.75rem] touch-manipulation items-center justify-center rounded-full text-xl font-medium text-stone-700 transition hover:bg-amber-100 active:scale-95"
+                              data-id={item.id}
+                              aria-label={`Quitar ${item.name}`}
+                            >
+                              −
+                            </button>
+                            <span
+                              data-menu-qty
+                              class="min-w-[1.75rem] text-center text-base font-bold tabular-nums text-stone-900"
+                            >
+                              0
+                            </span>
+                            <button
+                              type="button"
+                              class="menu-qty-inc flex h-11 min-w-[2.75rem] touch-manipulation items-center justify-center rounded-full text-xl font-medium text-stone-700 transition hover:bg-amber-100 active:scale-95"
+                              data-id={item.id}
+                              aria-label={`Añadir ${item.name}`}
+                            >
+                              +
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            data-menu-add
+                            data-id={item.id}
+                            data-name={item.name}
+                            data-price={String(item.price)}
+                            class="inline-flex min-h-[44px] touch-manipulation items-center justify-center rounded-full border border-amber-600 bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-amber-600 active:scale-[0.98]"
+                          >
+                            Añadir al pedido
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              {cat.categoryImage ? (
+                <div class="relative hidden lg:block">
+                  <div class="sticky top-36 overflow-hidden rounded-2xl border border-stone-200 shadow-lg">
+                    <img
+                      src={cat.categoryImage}
+                      alt=""
+                      class="aspect-[4/3] w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      width={600}
+                      height={450}
+                    />
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <!-- Confirmación rápida al añadir -->
+  <div
+    id="menu-toast"
+    class="pointer-events-none fixed bottom-[5.5rem] left-1/2 z-40 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 translate-y-4 opacity-0 transition duration-300 sm:bottom-28"
+    role="status"
+    aria-live="polite"
+  >
+    <div
+      class="pointer-events-auto flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-3.5 text-sm text-stone-800 shadow-2xl sm:gap-3 sm:px-5"
+    >
+      <span class="text-lg text-emerald-600" aria-hidden="true">✓</span>
+      <span class="font-medium">Añadido al pedido</span>
+      <button
+        type="button"
+        id="cart-toast-open"
+        class="font-bold text-amber-700 underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded"
+      >
+        Ver pedido
+      </button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+<script>
+  import '../scripts/menu-interactive';
+</script>

@@ -1,0 +1,38 @@
+---
+import { SITE } from '../config/site';
+
+interface Props {
+  /** En fondos claros el logo va en una caja oscura para que se lea bien */
+  variant?: 'default' | 'onLight';
+  /** Clases Tailwind para el &lt;img&gt; (tamaño principal) */
+  imgClass?: string;
+}
+
+const { variant = 'default', imgClass = 'h-10 w-auto sm:h-11' } = Astro.props;
+---
+
+{
+  variant === 'onLight' ? (
+    <span class="inline-flex shrink-0 rounded-xl bg-stone-900 p-2 shadow-sm ring-1 ring-stone-200">
+      <img
+        src={SITE.logoUrl}
+        alt={SITE.name}
+        class={imgClass}
+        width="280"
+        height="112"
+        loading="lazy"
+        decoding="async"
+      />
+    </span>
+  ) : (
+    <img
+      src={SITE.logoUrl}
+      alt={SITE.name}
+      class:list={[imgClass, 'drop-shadow-md']}
+      width="280"
+      height="112"
+      loading="eager"
+      decoding="async"
+    />
+  )
+}

@@ -1,0 +1,36 @@
+---
+import BrandLogo from './BrandLogo.astro';
+
+interface Props {
+  followers: number;
+  postsCount: number;
+  fullName: string;
+}
+
+const { followers, postsCount, fullName } = Astro.props;
+const fmt = (n: number) => new Intl.NumberFormat('es-CO').format(n);
+---
+
+<section class="border-y border-white/5 bg-coal-900/50">
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div class="mb-8 flex justify-center border-b border-white/5 pb-8 sm:justify-start">
+      <BrandLogo imgClass="h-14 w-auto sm:h-16" />
+    </div>
+    <div class="grid grid-cols-2 gap-6 sm:grid-cols-4">
+      <div>
+        <p class="font-display text-3xl font-semibold text-white">{fmt(followers)}</p>
+        <p class="text-sm text-stone-400">Seguidores en Instagram</p>
+      </div>
+      <div>
+        <p class="font-display text-3xl font-semibold text-white">{fmt(postsCount)}</p>
+        <p class="text-sm text-stone-400">Publicaciones</p>
+      </div>
+      <div class="col-span-2 sm:col-span-2">
+        <p class="text-sm font-medium text-stone-300">{fullName}</p>
+        <p class="mt-1 text-sm text-stone-500">
+          Datos obtenidos del perfil público analizado con la herramienta del repositorio (instaloader).
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
