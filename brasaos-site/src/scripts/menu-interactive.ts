@@ -1,4 +1,8 @@
 import { loadCart, saveCart } from './cart';
+import type { MenuCategory, MenuItem } from './cart';
+import menu from '../data/menu.json';
+
+const menuData = menu as MenuCategory[];
 
 function cartDelta(id: string, delta: number) {
   const c = loadCart();
@@ -60,6 +64,93 @@ function normalize(s: string): string {
     .replace(/\p{M}/gu, '');
 }
 
+function findItem(id: string): { item: MenuItem; category: string } | null {
+  for (const cat of menuData) {
+    const item = cat.items.find((i) => i.id === id);
+    if (item) return { item, category: cat.category };
+  }
+  return null;
+}
+
+function escapeHtml(s: string) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function setupItemDialog() {
+  const dialog = document.getElementById('menu-item-dialog') as HTMLDialogElement | null;
+  const imgWrap = document.getElementById('menu-dialog-image-wrap');
+  const catEl = document.getElementById('menu-dialog-category');
+  const titleEl = document.getElementById('menu-dialog-title');
+  const priceEl = document.getElementById('menu-dialog-price');
+  const descEl = document.getElementById('menu-dialog-desc');
+  const btnClose = document.getElementById('menu-dialog-close');
+  const btnClose2 = document.getElementById('menu-dialog-close-secondary');
+  const btnAdd = document.getElementById('menu-dialog-add');
+  if (!dialog || !imgWrap || !catEl || !titleEl || !priceEl || !descEl || !btnAdd) return;
+
+  function openForId(id: string) {
+    const found = findItem(id);
+    if (!found) return;
+    const { item, category } = found;
+
+    catEl.textContent = category;
+    titleEl.textContent = item.name;
+    priceEl.textContent = new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
+    }).format(item.price);
+    descEl.innerHTML = item.description
+      ? escapeHtml(item.description).replace(/\n/g, '<br>')
+      : '<span class="text-stone-400">Sin descripción adicional.</span>';
+
+    if (item.image) {
+      imgWrap.innerHTML = `<img src="${escapeHtml(item.image)}" alt="" class="h-full w-full object-cover" width="640" height="400" loading="eager" decoding="async" />`;
+    } else {
+      imgWrap.innerHTML =
+        '<div class="flex h-full min-h-[160px] items-center justify-center bg-stone-200 text-stone-400">Sin foto</div>';
+    }
+
+    btnAdd.dataset.id = id;
+    if (typeof dialog.showModal === 'function') {
+      dialog.showModal();
+    }
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-menu-open]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = btn.dataset.menuOpen;
+      if (id) openForId(id);
+    });
+  });
+
+  function closeDialog() {
+    dialog.close();
+  }
+
+  btnClose?.addEventListener('click', closeDialog);
+  btnClose2?.addEventListener('click', closeDialog);
+
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) closeDialog();
+  });
+
+  btnAdd.addEventListener('click', () => {
+    const id = btnAdd.dataset.id;
+    if (id) {
+      cartDelta(id, 1);
+      closeDialog();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dialog.open) closeDialog();
+  });
+}
+
 function runSearch(query: string) {
   const q = normalize(query.trim());
   const rows = document.querySelectorAll<HTMLElement>('.menu-item-row');
@@ -70,7 +161,12 @@ function runSearch(query: string) {
 
   if (!q) {
     rows.forEach((row) => row.classList.remove('hidden'));
-    blocks.forEach((block) => block.classList.remove('hidden'));
+    blocks.forEach((block) => {
+      block.classList.remove('hidden');
+      if (block instanceof HTMLDetailsElement) {
+        block.open = block.dataset.menuDefaultOpen === 'true';
+      }
+    });
     emptyEl?.classList.add('hidden');
     rootEl?.classList.remove('hidden');
     countEl?.classList.add('hidden');
@@ -88,6 +184,9 @@ function runSearch(query: string) {
       (r) => !r.classList.contains('hidden')
     );
     block.classList.toggle('hidden', !visible);
+    if (block instanceof HTMLDetailsElement) {
+      block.open = visible;
+    }
   });
 
   const visibleRows = Array.from(rows).filter((r) => !r.classList.contains('hidden'));
@@ -163,6 +262,13 @@ function setupCategoryObserver() {
   sections.forEach((s) => io.observe(s));
 }
 
+/** Estado inicial de cada <details> (para restaurar al limpiar búsqueda) */
+function markDefaultOpenDetails() {
+  document.querySelectorAll<HTMLDetailsElement>('.menu-category-details').forEach((d) => {
+    d.dataset.menuDefaultOpen = d.open ? 'true' : 'false';
+  });
+}
+
 function setupToolbarScroll() {
   const toolbar = document.getElementById('menu-toolbar');
   const section = document.getElementById('menu');
@@ -204,8 +310,10 @@ function bindSteppersAndAdd() {
 }
 
 function init() {
+  markDefaultOpenDetails();
   syncMenuSteppers();
   setupSearch();
+  setupItemDialog();
   setupCategoryObserver();
   setupToolbarScroll();
   bindSteppersAndAdd();
